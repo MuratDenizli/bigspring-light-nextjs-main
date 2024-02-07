@@ -1,0 +1,36 @@
+{
+  "site": {
+    "title": "Basınç Yaralanmasına Dur De",
+    "base_url": "/",
+    "favicon": "/images/favicon.png",
+    "logo": "/images/logo.jpeg",
+    "logo_width": "100",
+    "logo_height": "100",
+    "logo_text": "Bigspring Light"
+  },
+
+  "settings": {
+    "pagination": 4,
+    "summary_length": 1000,
+    "blog_folder": "blogs"
+  },
+
+  "nav_button": {
+    "enable": true,
+    "label": "Kayıt",
+    "link": "/contact"
+  },
+
+  "params": {
+    "contact_form_action": "",
+    "tag_manager_id": "",
+    "footer_content": "Lorem ipsum dolor sit amet, consectetur elit. Consjat tristique eget amet, tempus eu at cttur.",
+    "copyright": "Designed and Developed By Murat Denizli"
+  },
+
+  "metadata": {
+    "meta_author": "Themefisher",
+    "meta_image": "",
+    "meta_description": "A SAAS template for nextjs"
+  }
+}
