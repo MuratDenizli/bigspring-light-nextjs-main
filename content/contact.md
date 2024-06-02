@@ -3,7 +3,7 @@ title: "İletişim"
 layout: "contact"
 draft: false
 info: 
-  title: Neden bizimle iletişime geçmelisiniz!
+  title: Basınç yaralanması ve videolar hakkında merak ettiğiniz her şeyi bize aşağıdaki iletişim bilgilerini kullanarak sorabilirsiniz.
   description: Basınç yaralanmalarına karşı merak ettiğiniz sorularınızı bize iletebilirsiniz.
   contacts: 
     - "İletişim: Şerife Kelle Dikbaş"

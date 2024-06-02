@@ -4,12 +4,13 @@ import Link from "next/link";
 import YoutubePlayer from "./YoutubePlayer";
 
 function Sample({ cta }) {
+    
     return (
         <section className="section px-1">
             <div className="section container rounded-xl shadow">
                 <div className="row  mx-auto items-center justify-center">
                     <div className="md:col-6 lg:col-6">
-                        <YoutubePlayer className="w-full" id="C0DPdy98e4c" title="YouTube Video" width={325}
+                        <YoutubePlayer className="w-full" id="1P2-HLBQAjo" title="YouTube Video" width={325}
                             height={206} />
                     </div>
                     <div className="mt-5 text-center md:mt-0 md:text-left md:col-6 lg:col-5">

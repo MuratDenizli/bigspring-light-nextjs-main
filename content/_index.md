@@ -1,7 +1,7 @@
 ---
 banner:
   title: Basınç Yaralanmasına Dur De !
-  content: Araştırmacımız Uzman Hemşire Şerife Kelle Dikbaş'ın gerçekleştirmiş olduğu doktora tezi projesine katkıda bulunun.
+  content: Bu araştırma; İstanbul Üniversitesi-Cerrahpaşa Lisansüstü Eğitim Enstitüsü Hemşirelik Esasları Doktora Programı tez projesi kapsamında hazırlanmıştır.
   image: /images/banner-art.svg
   button:
     label: "Contact Us"

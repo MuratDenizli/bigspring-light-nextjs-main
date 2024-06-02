@@ -39,8 +39,13 @@ const Home = ({ frontmatter }) => {
                 alt="banner image"
                 priority
               /> */}
-              <video className="mx-auto mt-6" width={1000}
-                height={500} controls preload="true">
+              <video
+                className="mx-auto mt-6"
+                width={1000}
+                height={500}
+                controls
+                preload="true"
+              >
                 <source src="/videos/bizkimiz.mp4" type="video/mp4" />
               </video>
             </div>
@@ -53,6 +58,14 @@ const Home = ({ frontmatter }) => {
         <div className="container">
           <div className="text-center">
             <h2>Biz Kimiz?</h2>
+            <h4 className="mt-4">Araştırmacılarımızı tanıyalım </h4>
+            <p className="mt-4">
+              Sorumlu araştırmacımız Uzm. Hem. Şerife Dikbaş ve tez danışmanımız
+              Prof. Dr. Funda Büyükyılmaz.
+            </p>
+            <p className="mt-4">
+              Araştırmacılarımızı tanımak için aşağıda bir video yer almaktadır.
+            </p>
           </div>
           <div className="mt-8 grid gap-x-8 gap-y-6">
             {/* {feature.features.map((item, i) => (
@@ -75,10 +88,15 @@ const Home = ({ frontmatter }) => {
                 </div>
               </div>
             ))} */}
-            <video className="mx-auto mt-6" width={1000}
-                height={500} controls preload="true">
-                <source src="/videos/tanıtım.mp4" type="video/mp4" />
-              </video>
+            <video
+              className="mx-auto mt-6"
+              width={1000}
+              height={500}
+              controls
+              preload="true"
+            >
+              <source src="/videos/tanıtım.mp4" type="video/mp4" />
+            </video>
           </div>
         </div>
       </section>
