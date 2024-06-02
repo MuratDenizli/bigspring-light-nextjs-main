@@ -21,7 +21,9 @@ const Home = ({ frontmatter }) => {
           <div className="row text-center">
             <div className="mx-auto lg:col-10">
               <h1 className="font-primary font-bold">{banner.title}</h1>
-              <p className="mt-4">{markdownify(banner.content)}</p>
+              <p className="mt-4" style={{ color: "black", fontSize: "20px" }}>
+                {markdownify(banner.content)}
+              </p>
               {/* {banner.button.enable && (
                 <Link
                   className="btn btn-primary mt-4"
@@ -59,11 +61,11 @@ const Home = ({ frontmatter }) => {
           <div className="text-center">
             <h2>Biz Kimiz?</h2>
             <h4 className="mt-4">Araştırmacılarımızı tanıyalım </h4>
-            <p className="mt-4">
-              Sorumlu araştırmacımız Uzm. Hem. Şerife Dikbaş ve tez danışmanımız
+            <p className="mt-4" style={{ color: "black", fontSize: "20px" }}>
+              Sorumlu araştırmacı Uzm. Hem. Şerife Kelle Dikbaş ve tez danışmanı
               Prof. Dr. Funda Büyükyılmaz.
             </p>
-            <p className="mt-4">
+            <p className="mt-4" style={{ color: "black", fontSize: "20px" }}>
               Araştırmacılarımızı tanımak için aşağıda bir video yer almaktadır.
             </p>
           </div>
