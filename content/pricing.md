@@ -3,8 +3,8 @@ title: Eğitim
 layout: pricing
 draft: false
 contents:
-- title: Örnek Video 1
-  subtitle: Örnek Video Açıklaması 1
+- title:  Basınç Yaralanması ve Önlenmesi
+  subtitle: 
 
 - title: Örnek Video 2
   subtitle: Örnek Video Açıklaması 2

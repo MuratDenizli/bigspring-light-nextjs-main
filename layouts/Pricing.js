@@ -10,13 +10,13 @@ function Pricing({ data }) {
         <div className="container">
           <h1 className="text-center font-normal">{title}</h1>
           <div className="section row -mt-10 justify-center md:mt-0">
-            {contents.map((plan, index) => (
+            {/* {contents.map((plan, index) => (
               <Sample cta={plan} />
-            ))}
+            ))} */}
+            <Sample cta={contents[0]} />
           </div>
         </div>
       </section>
-      
     </>
   );
 }

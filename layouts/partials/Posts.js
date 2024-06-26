@@ -20,12 +20,15 @@ const Posts = ({ posts }) => {
               //   height={227}
               //   priority={true}
               // />
-              <YoutubePlayer
-                width={540}
-                height={227}
-                id="1P2-HLBQAjo"
-                title="YouTube Video"
-              />
+              <video
+                className="mx-auto mt-6"
+                width={1000}
+                height={500}
+                controls
+                preload="true"
+              >
+                <source src="/videos/programhakkinda.mp4" type="video/mp4" />
+              </video>
             )}
           </div>
           <div className="col-12 md:col-6">
@@ -45,7 +48,10 @@ const Posts = ({ posts }) => {
             </p>
             <p className="text-text">
               {plainify(
-                posts[0].frontmatter.description?.slice(0, Number(summary_length)),
+                posts[0].frontmatter.description?.slice(
+                  0,
+                  Number(summary_length)
+                ),
                 "div"
               )}
             </p>
