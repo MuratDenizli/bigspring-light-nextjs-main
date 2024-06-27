@@ -1,7 +1,7 @@
 ---
 banner:
   title: Basınç Yaralanmasına Dur De !
-  content: Bu websitesinde; İstanbul Üniversitesi-Cerrahpaşa Lisansüstü Eğitim Enstitüsü Hemşirelik Esasları Doktora Programı tez projesi kapsamında hazırlanmıştır.
+  content: Bu websitesi; İstanbul Üniversitesi-Cerrahpaşa Lisansüstü Eğitim Enstitüsü Hemşirelik Esasları Doktora Programı tez projesi kapsamında hazırlanmıştır.
   image: /images/banner-art.svg
   button:
     label: "Contact Us"
