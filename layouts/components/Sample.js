@@ -48,7 +48,7 @@ function Sample({ cta }) {
               onPlay={handleVideoPlayAttempt}
             >
               <source
-                src="http://198.7.112.94:8080/ders1.mp4"
+                src="https://198.7.112.94:8080/ders1.mp4"
                 type="video/mp4"
               />
             </video>
@@ -76,7 +76,7 @@ const Modal = ({ isOpen, onClose, setIsCorrect }) => {
   };
 
   const handleCheck = () => {
-    const getAllUsersUrl = "http://198.7.112.94:8080/getAllUsers";
+    const getAllUsersUrl = "https://198.7.112.94:8080/getAllUsers";
 
     fetch(getAllUsersUrl)
       .then((response) => response.json())
