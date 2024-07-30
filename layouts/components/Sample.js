@@ -7,64 +7,128 @@ function Sample({ cta }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [canPlay, setCanPlay] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [videos, setVideos] = useState([]);
+  const [index, setIndex] = useState(0);
 
-  const videoRef = useRef(null);
+  const videoRefs = useRef([]);
 
-  const handleVideoPlayAttempt = (event) => {
-    console.log("canPlay", canPlay);
-    console.log("isCorrect", isCorrect);
-    if (!canPlay && !isCorrect) {
-      event.preventDefault();
-      !isModalOpen && setIsModalOpen(true);
-      videoRef.current.pause();
-    }
-    console.log("canPlay LEvel2", canPlay);
-    console.log("isCorrect Level2", isCorrect);
+  useEffect(() => {
+    getAllVideos();
+  }, []);
+
+  useEffect(() => {
     if (isCorrect) {
-      videoRef.current.play();
+      handleVideoPlayAttempt(index);
+    }
+  }, [isCorrect]);
+
+  const handleVideoPlayAttempt = (streamInfo,index) => {
+    setIndex(index);
+
+    if (!videoRefs.current[index]) {
+      return;
+    }
+    if (!canPlay && !isCorrect) {
+      !isModalOpen && setIsModalOpen(true);
+      videoRefs.current[index].pause();
+    }
+
+    if (isCorrect) {
+      console.log("Level4", index);
+
+      videoRefs.current[index].play();
+      updateUserWatchedVideos(streamInfo);
     }
   };
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
-    console.log("closeModal isCorrect", isCorrect);
     if (isCorrect) {
       setCanPlay(true);
     }
   }, []);
 
+  const getAllVideos = () => {
+    const videosUrl = "https://featurebase.com.tr/getAllVideos";
+    fetch(videosUrl)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("videos data:", data);
+        setVideos(data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
+  const updateUserWatchedVideos = () => {
+    const userId = "1";
+    const streamInfoUpdate = {
+      id: userId,
+      streamInfo: {
+        videoBaslik: streamInfo.videoBaslik,
+        izledigiSure: "00:15:30",
+        tamanlanmaDurumu: false,
+      },
+    };
+
+    fetch(`https://featurebase.com.tr/updateWatchedList`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(streamInfoUpdate),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Success:", data);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  };
+
   return (
-    <section className="section px-1">
-      <div className="section container rounded-xl shadow">
-        <div className="row  mx-auto items-center justify-center">
-          <div className="md:col-6 lg:col-6">
-            <video
-              ref={videoRef}
-              className="mx-auto mt-6"
-              width={1000}
-              height={500}
-              controls
-              preload="true"
-              onPlay={handleVideoPlayAttempt}
-            >
-              <source
-                src="https://198.7.112.94:8080/ders1.mp4"
-                type="video/mp4"
-              />
-            </video>
-            <Modal
-              isOpen={isModalOpen}
-              onClose={closeModal}
-              setIsCorrect={setIsCorrect}
-            />
+    <>
+      {videos.map((item, index) => (
+        <section className="section px-1" key={item.id}>
+          <div className="section container rounded-xl shadow">
+            <div className="row  mx-auto items-center justify-center">
+              <div className="md:col-6 lg:col-6">
+                <video
+                  ref={(el) => (videoRefs.current[index] = el)}
+                  className="mx-auto mt-6"
+                  width={1000}
+                  height={500}
+                  controls
+                  preload="true"
+                  onPlay={() => handleVideoPlayAttempt(item, index)}
+                >
+                  <source
+                    src={`https://featurebase.com.tr/${item.url}.mp4`}
+                    type="video/mp4"
+                  />
+                </video>
+                <Modal
+                  isOpen={isModalOpen}
+                  onClose={closeModal}
+                  setIsCorrect={setIsCorrect}
+                />
+              </div>
+              <div className="mt-5 text-center md:col-6 lg:col-5 md:mt-0 md:text-left">
+                <h2>{item.videoName}</h2>
+                {/* <p className="mt-6">{markdownify(item.)}</p> */}
+              </div>
+            </div>
           </div>
-          <div className="mt-5 text-center md:col-6 lg:col-5 md:mt-0 md:text-left">
-            <h2>{cta?.title}</h2>
-            <p className="mt-6">{markdownify(cta?.subtitle)}</p>
-          </div>
-        </div>
-      </div>
-    </section>
+        </section>
+      ))}
+    </>
   );
 }
 
@@ -76,7 +140,7 @@ const Modal = ({ isOpen, onClose, setIsCorrect }) => {
   };
 
   const handleCheck = () => {
-    const getAllUsersUrl = "https://198.7.112.94:8080/getAllUsers";
+    const getAllUsersUrl = "https://featurebase.com.tr/getAllUsers";
 
     fetch(getAllUsersUrl)
       .then((response) => response.json())
@@ -95,6 +159,7 @@ const Modal = ({ isOpen, onClose, setIsCorrect }) => {
         console.error(error);
       });
   };
+
   if (!isOpen) return null;
 
   return (
