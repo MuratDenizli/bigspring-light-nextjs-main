@@ -9,6 +9,7 @@ function Sample({ cta }) {
   const [isCorrect, setIsCorrect] = useState(false);
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
+  const [userId, setUserId] = useState(null);
 
   const videoRefs = useRef([]);
 
@@ -22,7 +23,7 @@ function Sample({ cta }) {
     }
   }, [isCorrect]);
 
-  const handleVideoPlayAttempt = (streamInfo,index) => {
+  const handleVideoPlayAttempt = (streamInfo, index) => {
     setIndex(index);
 
     if (!videoRefs.current[index]) {
@@ -34,10 +35,7 @@ function Sample({ cta }) {
     }
 
     if (isCorrect) {
-      console.log("Level4", index);
-
       videoRefs.current[index].play();
-      updateUserWatchedVideos(streamInfo);
     }
   };
 
@@ -61,16 +59,9 @@ function Sample({ cta }) {
       });
   };
 
-  const updateUserWatchedVideos = () => {
-    const userId = "1";
-    const streamInfoUpdate = {
-      id: userId,
-      streamInfo: {
-        videoBaslik: streamInfo.videoBaslik,
-        izledigiSure: "00:15:30",
-        tamanlanmaDurumu: false,
-      },
-    };
+  const updateUserWatchedVideos = (streamInfoUpdate) => {
+    if (!streamInfoUpdate.id)
+      return console.error("streamInfoUpdate.id not found");
 
     fetch(`https://featurebase.com.tr/updateWatchedList`, {
       method: "PUT",
@@ -93,6 +84,20 @@ function Sample({ cta }) {
       });
   };
 
+  const formatTime = (seconds) => {
+    const secNum = parseInt(seconds, 10); // Saniye değerini tam sayıya çevirir
+    const hours = Math.floor(secNum / 3600); // Saat
+    const minutes = Math.floor((secNum - hours * 3600) / 60); // Dakika
+    const secs = secNum - hours * 3600 - minutes * 60; // Saniye
+
+    // Saat, dakika ve saniye değerlerini çift haneli olacak şekilde formatla
+    const formattedHours = hours < 10 ? `0${hours}` : hours;
+    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+    const formattedSeconds = secs < 10 ? `0${secs}` : secs;
+
+    return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+  };
+
   return (
     <>
       {videos.map((item, index) => (
@@ -108,6 +113,24 @@ function Sample({ cta }) {
                   controls
                   preload="true"
                   onPlay={() => handleVideoPlayAttempt(item, index)}
+                  onPause={() =>
+                    updateUserWatchedVideos({
+                      id: userId,
+                      streamInfo: {
+                        videoBaslik: item.videoName,
+                        izledigiSure: formatTime(
+                          videoRefs.current[index].currentTime
+                        ),
+                        tamanlanmaDurumu:
+                          (videoRefs.current[index].currentTime /
+                            videoRefs.current[index].duration) *
+                            100 <=
+                          95
+                            ? false
+                            : true,
+                      },
+                    })
+                  }
                 >
                   <source
                     src={`https://featurebase.com.tr/${item.url}.mp4`}
@@ -118,6 +141,7 @@ function Sample({ cta }) {
                   isOpen={isModalOpen}
                   onClose={closeModal}
                   setIsCorrect={setIsCorrect}
+                  setUserId={setUserId}
                 />
               </div>
               <div className="mt-5 text-center md:col-6 lg:col-5 md:mt-0 md:text-left">
@@ -132,7 +156,7 @@ function Sample({ cta }) {
   );
 }
 
-const Modal = ({ isOpen, onClose, setIsCorrect }) => {
+const Modal = ({ isOpen, onClose, setIsCorrect, setUserId }) => {
   const [userName, setUserName] = useState("");
 
   const handleChangeUserName = (e) => {
@@ -151,8 +175,13 @@ const Modal = ({ isOpen, onClose, setIsCorrect }) => {
               t.username.toLowerCase().trim() === userName.toLowerCase().trim()
           ).length > 0;
 
-        console.log("res", res);
+        const user = data.find(
+          (t) =>
+            t.username.toLowerCase().trim() === userName.toLowerCase().trim()
+        );
+
         res == true ? setIsCorrect(true) : setIsCorrect(false);
+        user && setUserId(user.id);
         onClose();
       })
       .catch((error) => {
@@ -177,7 +206,7 @@ const Modal = ({ isOpen, onClose, setIsCorrect }) => {
           onChange={(e) => handleChangeUserName(e)}
         />
         <button className="btn btn-primary mx-auto mt-4" onClick={handleCheck}>
-          Kontrol Et
+          Giriş Yap
         </button>
       </div>
     </div>
