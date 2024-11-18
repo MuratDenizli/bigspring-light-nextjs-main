@@ -6,4 +6,5 @@ date: 2022-08-04T05:00:00Z
 draft: false
 ---
 
-Bu araştırmanın amacı, aldığınız eğitim ve danışmanlığın hastalarda basınç yaralanması riski kendi kendine yetebilme düzeyi ve sizlerin hastalara bakım verirken zorlanma durumunuza etkisini incelemektir.
+Bakım vericilere verilen web tabanlı eğitim ve danışmanlığın, hastaların basınç yaralanması riski, kendi kendine yetebilme durumları ve bakım vericilerin bakım verirken karşılaştıkları güçlüklere olan etkisini incelemektir.
+

@@ -47,7 +47,7 @@ function Sample({ cta }) {
   }, []);
 
   const getAllVideos = () => {
-    const videosUrl = "https://featurebase.com.tr/getAllVideos";
+    const videosUrl = "https://api.basincyaralanmasinionle.xyz/getAllVideos";
     fetch(videosUrl)
       .then((response) => response.json())
       .then((data) => {
@@ -63,7 +63,7 @@ function Sample({ cta }) {
     if (!streamInfoUpdate.id)
       return console.error("streamInfoUpdate.id not found");
 
-    fetch(`https://featurebase.com.tr/updateWatchedList`, {
+    fetch(`https://api.basincyaralanmasinionle.xyz/updateWatchedList`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -133,7 +133,7 @@ function Sample({ cta }) {
                   }
                 >
                   <source
-                    src={`https://featurebase.com.tr/${item.url}.mp4`}
+                    src={`https://api.basincyaralanmasinionle.xyz/${item.url}.mp4`}
                     type="video/mp4"
                   />
                 </video>
@@ -145,7 +145,7 @@ function Sample({ cta }) {
                 />
               </div>
               <div className="mt-5 text-center md:col-6 lg:col-5 md:mt-0 md:text-left">
-                <h2>{item.videoName}</h2>
+                <h2>{item.videoName}?</h2>
                 {/* <p className="mt-6">{markdownify(item.)}</p> */}
               </div>
             </div>
@@ -164,7 +164,7 @@ const Modal = ({ isOpen, onClose, setIsCorrect, setUserId }) => {
   };
 
   const handleCheck = () => {
-    const getAllUsersUrl = "https://featurebase.com.tr/getAllUsers";
+    const getAllUsersUrl = "https://api.basincyaralanmasinionle.xyz/getAllUsers";
 
     fetch(getAllUsersUrl)
       .then((response) => response.json())
