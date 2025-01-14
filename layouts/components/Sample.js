@@ -47,7 +47,7 @@ function Sample({ cta }) {
   }, []);
 
   const getAllVideos = () => {
-    const videosUrl = "https://api.basincyaralanmasinionle.xyz/getAllVideos";
+    const videosUrl = "https://basincyaralanmasinionle.xyz/getAllVideos";
     fetch(videosUrl)
       .then((response) => response.json())
       .then((data) => {
@@ -63,7 +63,7 @@ function Sample({ cta }) {
     if (!streamInfoUpdate.id)
       return console.error("streamInfoUpdate.id not found");
 
-    fetch(`https://api.basincyaralanmasinionle.xyz/updateWatchedList`, {
+    fetch(`https://basincyaralanmasinionle.xyz/updateWatchedList`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -133,7 +133,7 @@ function Sample({ cta }) {
                   }
                 >
                   <source
-                    src={`https://api.basincyaralanmasinionle.xyz/${item.url}.mp4`}
+                    src={`https://basincyaralanmasinionle.xyz/${item.url}.mp4`}
                     type="video/mp4"
                   />
                 </video>
@@ -164,7 +164,7 @@ const Modal = ({ isOpen, onClose, setIsCorrect, setUserId }) => {
   };
 
   const handleCheck = () => {
-    const getAllUsersUrl = "https://api.basincyaralanmasinionle.xyz/getAllUsers";
+    const getAllUsersUrl = "https://basincyaralanmasinionle.xyz/getAllUsers";
 
     fetch(getAllUsersUrl)
       .then((response) => response.json())
