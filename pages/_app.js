@@ -42,6 +42,7 @@ const App = ({ Component, pageProps }) => {
           href="https://fonts.gstatic.com"
           crossOrigin="true"
         />
+
         <style
           dangerouslySetInnerHTML={{
             __html: `${fontcss}`,

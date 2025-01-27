@@ -3,7 +3,7 @@ title: "İletişim"
 layout: "contact"
 draft: false
 info: 
-  title: Basınç yaralanması hakkında merak ettiğiniz herşeyi  aşağıdaki iletişim bilgilerini kullanarak sorabilirsiniz..
+  title: Basınç yaralanmasının önlenmesi ile ilgili merak ettiğiniz herşeyi aşağıdaki iletişim bilgilerini kullanarak sorabilirsiniz..
   description: Basınç yaralanmalarına karşı merak ettiğiniz sorularınızı bize iletebilirsiniz.
   contacts: 
     - "İletişim: Şerife Kelle Dikbaş"

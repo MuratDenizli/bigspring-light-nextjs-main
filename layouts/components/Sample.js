@@ -1,34 +1,49 @@
-import { markdownify } from "@lib/utils/textConverter";
-import Image from "next/image";
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import VideoPlayer from "./VideoPlayer";
 
 function Sample({ cta }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [canPlay, setCanPlay] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [videos, setVideos] = useState([]);
-  const [index, setIndex] = useState(0);
-  const [userId, setUserId] = useState(null);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [isQuestionVisible, setIsQuestionVisible] = useState(false);
 
+  const [userId, setUserId] = useState(null);
   const videoRefs = useRef([]);
+
+  const questions = [
+    {
+      time: 10, // Sorunun gösterileceği video süresi (saniye)
+      question:
+        "Hastaların yatak başı derecelerinden hangisinde basınç yaralanma riski daha azdır?",
+      options: ["30°", "60°", "90°"],
+      correct: 0,
+    },
+    {
+      time: 20,
+      question:
+        "Sırtüstü yatar pozisyonda yatan hastalarda, kaç saatte bir pozisyon değişikliği gerekmektedir?",
+      options: [
+        "En az iki saatte bir",
+        "Dört altı saatte bir",
+        "Gün içerisinde iki veya üç kez",
+      ],
+      correct: 0,
+    },
+    // Diğer soruları buraya ekleyin
+  ];
 
   useEffect(() => {
     getAllVideos();
   }, []);
 
-  useEffect(() => {
-    if (isCorrect) {
-      handleVideoPlayAttempt(index);
-    }
-  }, [isCorrect]);
-
-  const handleVideoPlayAttempt = (streamInfo, index) => {
-    setIndex(index);
-
+  const handleVideoPlayAttempt = (streamInfo, index, userId) => {
+    console.log("handleVideoPlayAttempt", { streamInfo, index, userId });
     if (!videoRefs.current[index]) {
       return;
     }
+    console.log("cart");
     if (!canPlay && !isCorrect) {
       !isModalOpen && setIsModalOpen(true);
       videoRefs.current[index].pause();
@@ -52,16 +67,19 @@ function Sample({ cta }) {
       .then((response) => response.json())
       .then((data) => {
         console.log("videos data:", data);
-        setVideos(data);
+        const sortedVideos = data.sort((a, b) => a.id - b.id);
+        setVideos(sortedVideos);
       })
       .catch((error) => {
         console.error(error);
       });
   };
 
-  const updateUserWatchedVideos = (streamInfoUpdate) => {
-    if (!streamInfoUpdate.id)
-      return console.error("streamInfoUpdate.id not found");
+  const updateUserWatchedVideos = (index, streamInfoUpdate) => {
+    console.log("streamInfoUpdate.id", streamInfoUpdate.id);
+    if (!streamInfoUpdate.id && videoRefs.current[index].getCurrentTime() < 1) {
+      return;
+    }
 
     fetch(`https://basincyaralanmasinionle.xyz/updateWatchedList`, {
       method: "PUT",
@@ -103,49 +121,84 @@ function Sample({ cta }) {
       {videos.map((item, index) => (
         <section className="section px-1" key={item.id}>
           <div className="section container rounded-xl shadow">
-            <div className="row  mx-auto items-center justify-center">
+            <div className="row mx-auto items-center justify-center">
               <div className="md:col-6 lg:col-6">
-                <video
+                <VideoPlayer
                   ref={(el) => (videoRefs.current[index] = el)}
-                  className="mx-auto mt-6"
-                  width={1000}
-                  height={500}
-                  controls
-                  preload="true"
-                  onPlay={() => handleVideoPlayAttempt(item, index)}
-                  onPause={() =>
-                    updateUserWatchedVideos({
+                  options={{
+                    autoplay: false,
+                    controls: true,
+                    responsive: true,
+                    fluid: true,
+                    experimentalSvgIcons: true,
+                    sources: [
+                      {
+                        src: `https://basincyaralanmasinionle.xyz/${item.url}`,
+                        type: "application/dash+xml",
+                      },
+                    ],
+                  }}
+                  onReady={(player) => {
+                    player.autoplay();
+                  }}
+                  onPlay={() => {
+                    handleVideoPlayAttempt(item, index, userId);
+                  }}
+                  onPause={(currentTime, duration) => {
+                    updateUserWatchedVideos(index, {
+                      index: index,
                       id: userId,
                       streamInfo: {
                         videoBaslik: item.videoName,
-                        izledigiSure: formatTime(
-                          videoRefs.current[index].currentTime
-                        ),
+                        izledigiSure: formatTime(currentTime),
                         tamanlanmaDurumu:
-                          (videoRefs.current[index].currentTime /
-                            videoRefs.current[index].duration) *
-                            100 <=
-                          95
-                            ? false
-                            : true,
+                          (currentTime / duration) * 100 <= 95 ? false : true,
                       },
-                    })
-                  }
-                >
-                  <source
-                    src={`https://basincyaralanmasinionle.xyz/${item.url}.mp4`}
-                    type="video/mp4"
-                  />
-                </video>
-                <Modal
-                  isOpen={isModalOpen}
-                  onClose={closeModal}
-                  setIsCorrect={setIsCorrect}
-                  setUserId={setUserId}
+                    });
+                  }}
                 />
+                {isQuestionVisible && (
+                  <div
+                    style={{
+                      position: "fixed",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                      background: "white",
+                      border: "1px solid black",
+                      padding: "20px",
+                      zIndex: 1000,
+                    }}
+                  >
+                    <p>{currentQuestion.question}</p>
+                    {currentQuestion.options.map((option, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleAnswer(index)}
+                        style={{
+                          display: "block",
+                          margin: "10px 0",
+                          padding: "10px",
+                          background: "#f0f0f0",
+                          border: "1px solid #ccc",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {isModalOpen && (
+                  <Modal
+                    onClose={closeModal}
+                    setIsCorrect={setIsCorrect}
+                    setUserId={setUserId}
+                  />
+                )}
               </div>
               <div className="mt-5 text-center md:col-6 lg:col-5 md:mt-0 md:text-left">
-                <h2>{item.videoName}?</h2>
+                <h2>{item.videoName}</h2>
                 {/* <p className="mt-6">{markdownify(item.)}</p> */}
               </div>
             </div>
@@ -156,7 +209,7 @@ function Sample({ cta }) {
   );
 }
 
-const Modal = ({ isOpen, onClose, setIsCorrect, setUserId }) => {
+const Modal = ({ onClose, setIsCorrect, setUserId }) => {
   const [userName, setUserName] = useState("");
 
   const handleChangeUserName = (e) => {
@@ -188,8 +241,6 @@ const Modal = ({ isOpen, onClose, setIsCorrect, setUserId }) => {
         console.error(error);
       });
   };
-
-  if (!isOpen) return null;
 
   return (
     <div className="modal">
