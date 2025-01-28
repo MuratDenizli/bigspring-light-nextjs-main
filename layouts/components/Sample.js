@@ -3,25 +3,33 @@ import VideoPlayer from "./VideoPlayer";
 
 function Sample({ cta }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [canPlay, setCanPlay] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [videos, setVideos] = useState([]);
+
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [isQuestionVisible, setIsQuestionVisible] = useState(false);
+  const [userAnswer, setUserAnswer] = useState(null);
+  const pausedTimeRef = useRef(null);
 
   const [userId, setUserId] = useState(null);
+  const [questionTimes, setQuestionTimes] = useState([]);
+
   const videoRefs = useRef([]);
+  const userIdRef = useRef(userId);
+  const isCorrectRef = useRef(isCorrect);
+  const isModalOpenRef = useRef(isModalOpen);
+  const selectedQuestions = useRef([]);
 
   const questions = [
     {
-      time: 10, // Sorunun gösterileceği video süresi (saniye)
+      time: 100, // Sorunun gösterileceği video süresi (saniye)
       question:
         "Hastaların yatak başı derecelerinden hangisinde basınç yaralanma riski daha azdır?",
       options: ["30°", "60°", "90°"],
-      correct: 0,
+      correct: 0, // Doğru cevap: 30°
     },
     {
-      time: 20,
+      time: 200,
       question:
         "Sırtüstü yatar pozisyonda yatan hastalarda, kaç saatte bir pozisyon değişikliği gerekmektedir?",
       options: [
@@ -29,36 +37,147 @@ function Sample({ cta }) {
         "Dört altı saatte bir",
         "Gün içerisinde iki veya üç kez",
       ],
-      correct: 0,
+      correct: 0, // Doğru cevap: En az iki saatte bir
     },
-    // Diğer soruları buraya ekleyin
+    {
+      time: 300,
+      question: "Havalı yataklarla ilgili doğru olan seçeneği işaretleyiniz?",
+      options: [
+        "Havalı yatağın basıncı her hasta için aynıdır.",
+        "Havalı yatak kullanan hastada düzenli pozisyon değişikliği gerekir.",
+        "Basınç yaralanmalarının gelişmesini tamamen önler.",
+      ],
+      correct: 1, // Doğru cevap: Havalı yatak kullanan hastada düzenli pozisyon değişikliği gerekir.
+    },
+    {
+      time: 340,
+      question:
+        "Deri bakımına yönelik aşağıdaki ifadelerden doğru seçeneği işaretleyiniz.",
+      options: [
+        "Kuru cilde pudra uygulanmalıdır.",
+        "Kuru cilt nemlendirilmelidir.",
+        "Kuru cilt su ve sabunla sürekli temizlenmelidir.",
+      ],
+      correct: 1, // Doğru cevap: Kuru cilt nemlendirilmelidir.
+    },
+    {
+      time: 350,
+      question:
+        "1.aşama basınç yaralanmaları ile ilgili doğru seçeneği işaretleyiniz.",
+      options: [
+        "Deride gözle görünür deri kaybı, içi sıvı dolu kabarcıklar vardır.",
+        "Deride özellikle topuklarda basmakla solmayan mor, koyu kestane renginde bir görüntü vardır.",
+        "Deride basmakla solmayan kırmızılık vardır.",
+      ],
+      correct: 2, // Doğru cevap: Deride basmakla solmayan kırmızılık vardır.
+    },
+    {
+      time: 360,
+      question:
+        "Sırtüstü yatış pozisyonunda en sık basınç yaralanması gelişen bölge neresidir?",
+      options: ["Kuyruk sokumu", "Dizler", "Yanaklar"],
+      correct: 0, // Doğru cevap: Kuyruk sokumu
+    },
+    {
+      time: 380,
+      question: "Yetersiz beslenme basınç yaralanmasına neden olur?",
+      options: ["Doğru", "Yanlış"],
+      correct: 0, // Doğru cevap: Doğru
+    },
+    {
+      time: 500,
+      question:
+        "Kansızlığı olan hastalarda, olmayan hastalara göre, basınç yaralanması gelişme ihtimali daha yüksektir.",
+      options: ["Doğru", "Yanlış"],
+      correct: 0, // Doğru cevap: Doğru
+    },
+    {
+      time: 520,
+      question:
+        "Yatakta hareketsiz kalmak basınç yaralanması riskini artırabilir.",
+      options: ["Doğru", "Yanlış"],
+      correct: 0, // Doğru cevap: Doğru
+    },
+    {
+      time: 600,
+      question:
+        "Cildin nemli olması (ıslak, terli veya ıslak) bası yaralanması riskini etkilemez.",
+      options: ["Doğru", "Yanlış"],
+      correct: 1, // Doğru cevap: Yanlış
+    },
   ];
 
   useEffect(() => {
     getAllVideos();
   }, []);
 
-  const handleVideoPlayAttempt = (streamInfo, index, userId) => {
-    console.log("handleVideoPlayAttempt", { streamInfo, index, userId });
-    if (!videoRefs.current[index]) {
-      return;
-    }
-    console.log("cart");
-    if (!canPlay && !isCorrect) {
-      !isModalOpen && setIsModalOpen(true);
-      videoRefs.current[index].pause();
+  useEffect(() => {
+    userIdRef.current = userId; // userId güncellendiğinde ref'i de güncelle.
+  }, [userId]);
+
+  useEffect(() => {
+    isCorrectRef.current = isCorrect;
+  }, [isCorrect]);
+
+  useEffect(() => {
+    isModalOpenRef.current = isModalOpen;
+  }, [isModalOpen]);
+
+  useEffect(() => {
+    // 10 sorudan rastgele 2 soru seçelim
+    const randomIndices = [];
+    while (selectedQuestions.current.length < 2) {
+      const randomIndex = Math.floor(Math.random() * questions.length);
+      if (!randomIndices.includes(randomIndex)) {
+        randomIndices.push(randomIndex);
+        selectedQuestions.current.push(questions[randomIndex]);
+      }
     }
 
-    if (isCorrect) {
-      videoRefs.current[index].play();
+    // Seçilen soruların zamanlarını belirle
+    setQuestionTimes(selectedQuestions.current.map((q) => q.time));
+  }, []);
+
+  const handleTimeUpdate = (currentTime, videoElement) => {
+    const roundedTime = Math.floor(currentTime);
+    const question = selectedQuestions.current.find(
+      (q) => q.time === roundedTime
+    );
+
+    if (question && !isQuestionVisible) {
+      setCurrentQuestion(question);
+      console.log("Soru gösterilecek asniye:", currentTime);
+      pausedTimeRef.current = Math.floor(currentTime);
+      setIsQuestionVisible(true);
+      videoElement.pause(); // Video duraklatılır
     }
   };
 
+  const handleVideoPlayAttempt = useCallback(
+    (streamInfo, index) => {
+      const currentUserId = userIdRef.current;
+      if (!videoRefs.current[index]) {
+        return;
+      }
+      console.log({
+        isCorrect: isCorrectRef.current,
+        isModalOpen: isModalOpenRef.current,
+        userId: currentUserId,
+      });
+      if (!currentUserId && !isCorrectRef.current) {
+        !isModalOpenRef.current && setIsModalOpen(true);
+        videoRefs.current[index].pause();
+      }
+
+      if (isCorrectRef.current) {
+        videoRefs.current[index].play();
+      }
+    },
+    [isCorrect, isModalOpen, userId]
+  );
+
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
-    if (isCorrect) {
-      setCanPlay(true);
-    }
   }, []);
 
   const getAllVideos = () => {
@@ -75,9 +194,12 @@ function Sample({ cta }) {
       });
   };
 
-  const updateUserWatchedVideos = (index, streamInfoUpdate) => {
-    console.log("streamInfoUpdate.id", streamInfoUpdate.id);
-    if (!streamInfoUpdate.id && videoRefs.current[index].getCurrentTime() < 1) {
+  const updateUserWatchedVideos = (streamInfoUpdate) => {
+    console.log("streamInfoUpdate", { streamInfoUpdate });
+    if (
+      !streamInfoUpdate.id &&
+      videoRefs.current[streamInfoUpdate.index].getCurrentTime() < 1
+    ) {
       return;
     }
 
@@ -116,6 +238,23 @@ function Sample({ cta }) {
     return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
   };
 
+  const handleAnswer = (selectedOptionIndex) => {
+    const videoElement = videoRefs.current.find((ref) => ref !== null);
+    if (currentQuestion.correct === selectedOptionIndex) {
+      console.log("Doğru cevap!");
+      // Modal'ı kapat ve videoyu kaldığı yerden oynat
+      setIsQuestionVisible(false);
+      if (videoElement) {
+        setTimeout(() => {
+          videoElement.setCurrentTime(pausedTimeRef.current + 1);
+          videoElement.play();
+        }, 2000);
+      }
+    } else {
+      console.log("Yanlış cevap!");
+    }
+  };
+
   return (
     <>
       {videos.map((item, index) => (
@@ -141,13 +280,11 @@ function Sample({ cta }) {
                   onReady={(player) => {
                     player.autoplay();
                   }}
-                  onPlay={() => {
-                    handleVideoPlayAttempt(item, index, userId);
-                  }}
+                  onPlay={() => handleVideoPlayAttempt(item, index)}
                   onPause={(currentTime, duration) => {
-                    updateUserWatchedVideos(index, {
+                    updateUserWatchedVideos({
                       index: index,
-                      id: userId,
+                      id: userIdRef.current,
                       streamInfo: {
                         videoBaslik: item.videoName,
                         izledigiSure: formatTime(currentTime),
@@ -156,6 +293,9 @@ function Sample({ cta }) {
                       },
                     });
                   }}
+                  onTimeUpdate={(currentTime, videoElement) =>
+                    handleTimeUpdate(currentTime, videoElement)
+                  }
                 />
                 {isQuestionVisible && (
                   <div

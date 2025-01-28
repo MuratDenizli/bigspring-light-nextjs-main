@@ -5,13 +5,16 @@ import "video.js/dist/video-js.css";
 const VideoPlayer = React.forwardRef((props, ref) => {
   const videoRef = useRef(null);
   const playerRef = useRef(null);
-  const { options, onReady, onPlay, onPause, onVideoUpdate } = props;
+  const { options, onReady, onPlay, onPause, onTimeUpdate } = props;
 
   useImperativeHandle(ref, () => ({
     play: () => playerRef.current.play(),
     pause: () => playerRef.current.pause(),
     getCurrentTime: () => playerRef.current.currentTime(),
     getDuration: () => playerRef.current.duration(),
+    setCurrentTime: (time) => {
+      playerRef.current.currentTime(time);
+    },
   }));
 
   useEffect(() => {
@@ -25,11 +28,20 @@ const VideoPlayer = React.forwardRef((props, ref) => {
       }));
 
       player.on("play", () => {
-        onPlay && onPlay(player.currentTime(), player.duration());
+        onPlay && onPlay();
       });
 
       player.on("pause", () => {
         onPause && onPause(player.currentTime(), player.duration());
+      });
+
+      player.on("timeupdate", () => {
+        onTimeUpdate && onTimeUpdate(player.currentTime(), player);
+      });
+
+      player.on("seeked", () => {
+        console.log("Video seek işleminden sonra devam ediyor.");
+        player.play();
       });
 
       const controls = document.querySelectorAll(".vjs-control.vjs-hidden");
