@@ -29,7 +29,7 @@ function Sample({ cta }) {
       correct: 0, // Doğru cevap: 30°
     },
     {
-      time: 200,
+      time: 120,
       question:
         "Sırtüstü yatar pozisyonda yatan hastalarda, kaç saatte bir pozisyon değişikliği gerekmektedir?",
       options: [
@@ -40,7 +40,7 @@ function Sample({ cta }) {
       correct: 0, // Doğru cevap: En az iki saatte bir
     },
     {
-      time: 300,
+      time: 130,
       question: "Havalı yataklarla ilgili doğru olan seçeneği işaretleyiniz?",
       options: [
         "Havalı yatağın basıncı her hasta için aynıdır.",
@@ -50,7 +50,7 @@ function Sample({ cta }) {
       correct: 1, // Doğru cevap: Havalı yatak kullanan hastada düzenli pozisyon değişikliği gerekir.
     },
     {
-      time: 340,
+      time: 140,
       question:
         "Deri bakımına yönelik aşağıdaki ifadelerden doğru seçeneği işaretleyiniz.",
       options: [
@@ -61,7 +61,7 @@ function Sample({ cta }) {
       correct: 1, // Doğru cevap: Kuru cilt nemlendirilmelidir.
     },
     {
-      time: 350,
+      time: 150,
       question:
         "1.aşama basınç yaralanmaları ile ilgili doğru seçeneği işaretleyiniz.",
       options: [
@@ -72,34 +72,34 @@ function Sample({ cta }) {
       correct: 2, // Doğru cevap: Deride basmakla solmayan kırmızılık vardır.
     },
     {
-      time: 360,
+      time: 200,
       question:
         "Sırtüstü yatış pozisyonunda en sık basınç yaralanması gelişen bölge neresidir?",
       options: ["Kuyruk sokumu", "Dizler", "Yanaklar"],
       correct: 0, // Doğru cevap: Kuyruk sokumu
     },
     {
-      time: 380,
+      time: 210,
       question: "Yetersiz beslenme basınç yaralanmasına neden olur?",
       options: ["Doğru", "Yanlış"],
       correct: 0, // Doğru cevap: Doğru
     },
     {
-      time: 500,
+      time: 220,
       question:
         "Kansızlığı olan hastalarda, olmayan hastalara göre, basınç yaralanması gelişme ihtimali daha yüksektir.",
       options: ["Doğru", "Yanlış"],
       correct: 0, // Doğru cevap: Doğru
     },
     {
-      time: 520,
+      time: 230,
       question:
         "Yatakta hareketsiz kalmak basınç yaralanması riskini artırabilir.",
       options: ["Doğru", "Yanlış"],
       correct: 0, // Doğru cevap: Doğru
     },
     {
-      time: 600,
+      time: 240,
       question:
         "Cildin nemli olması (ıslak, terli veya ıslak) bası yaralanması riskini etkilemez.",
       options: ["Doğru", "Yanlış"],
