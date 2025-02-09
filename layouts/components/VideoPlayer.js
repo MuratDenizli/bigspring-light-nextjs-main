@@ -8,12 +8,26 @@ const VideoPlayer = React.forwardRef((props, ref) => {
   const { options, onReady, onPlay, onPause, onTimeUpdate } = props;
 
   useImperativeHandle(ref, () => ({
-    play: () => playerRef.current.play(),
-    pause: () => playerRef.current.pause(),
+    play: () => {
+      console.log("Play çağrıldı");
+      return playerRef.current.play();
+    },
+    pause: () => {
+      console.log("Pause çağrıldı");
+      return playerRef.current.pause();
+    },
     getCurrentTime: () => playerRef.current.currentTime(),
     getDuration: () => playerRef.current.duration(),
     setCurrentTime: (time) => {
-      playerRef.current.currentTime(time);
+      console.log("Yeni zaman ayarlanıyor:", time);
+      if (playerRef.current) {
+        playerRef.current.currentTime(time);
+        // Zaman ayarlandıktan sonra oynatmayı dene
+        playerRef.current.one('seeked', () => {
+          console.log("Seek tamamlandı, video devam ediyor");
+          playerRef.current.play();
+        });
+      }
     },
   }));
 
@@ -23,25 +37,51 @@ const VideoPlayer = React.forwardRef((props, ref) => {
       videoElement.classList.add("vjs-big-play-centered");
       videoRef.current.appendChild(videoElement);
 
-      const player = (playerRef.current = videojs(videoElement, options, () => {
+      const player = (playerRef.current = videojs(videoElement, {
+        ...options,
+        controlBar: {
+          // Sadece oynat/duraklat ve ses kontrollerini göster
+          children: [
+            'playToggle',
+            'volumePanel',
+            'currentTimeDisplay',
+            'timeDivider',
+            'durationDisplay',
+          ],
+          // Diğer kontrolleri gizle
+          progressControl: false,
+          remainingTimeDisplay: false,
+          playbackRateMenuButton: false,
+          fullscreenToggle: true
+        }
+      }, () => {
+        console.log("Video.js player hazır");
         onReady && onReady(player);
       }));
 
+      // İleri-geri alma işlemlerini engelle
+      player.on('seeking', () => {
+        const currentTime = player.currentTime();
+        const lastTime = player.cache_.currentTime || 0;
+        
+        // Eğer kullanıcı ileri-geri almaya çalışırsa engelle
+        if (Math.abs(currentTime - lastTime) > 1) {
+          player.currentTime(lastTime);
+        }
+      });
+
       player.on("play", () => {
+        console.log("Video oynatılıyor");
         onPlay && onPlay();
       });
 
       player.on("pause", () => {
+        console.log("Video duraklatıldı, süre:", player.currentTime());
         onPause && onPause(player.currentTime(), player.duration());
       });
 
       player.on("timeupdate", () => {
         onTimeUpdate && onTimeUpdate(player.currentTime(), player);
-      });
-
-      player.on("seeked", () => {
-        console.log("Video seek işleminden sonra devam ediyor.");
-        player.play();
       });
 
       const controls = document.querySelectorAll(".vjs-control.vjs-hidden");

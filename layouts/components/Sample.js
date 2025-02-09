@@ -14,6 +14,7 @@ function Sample({ cta }) {
   const [userId, setUserId] = useState(null);
   const [questionTimes, setQuestionTimes] = useState([]);
 
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const videoRefs = useRef([]);
   const userIdRef = useRef(userId);
   const isCorrectRef = useRef(isCorrect);
@@ -146,7 +147,7 @@ function Sample({ cta }) {
 
     if (question && !isQuestionVisible) {
       setCurrentQuestion(question);
-      console.log("Soru gösterilecek asniye:", currentTime);
+      console.log("Soru gösterilecek saniye:", currentTime);
       pausedTimeRef.current = Math.floor(currentTime);
       setIsQuestionVisible(true);
       videoElement.pause(); // Video duraklatılır
@@ -239,11 +240,16 @@ function Sample({ cta }) {
   };
 
   const handleAnswer = (selectedOptionIndex) => {
-    const videoElement = videoRefs.current.find((ref) => ref !== null);
+    // Aktif videoyu bul
+    const videoElement = videoRefs.current[activeVideoIndex];
+    
+    console.log("Cevap verilen video:", activeVideoIndex);
+    console.log("Duraklatılan zaman:", pausedTimeRef.current);
+
     if (currentQuestion.correct === selectedOptionIndex) {
       console.log("Doğru cevap!");
-      // Modal'ı kapat ve videoyu kaldığı yerden oynat
       setIsQuestionVisible(false);
+      
       if (videoElement) {
         setTimeout(() => {
           videoElement.setCurrentTime(pausedTimeRef.current + 1);
@@ -280,7 +286,10 @@ function Sample({ cta }) {
                   onReady={(player) => {
                     player.autoplay();
                   }}
-                  onPlay={() => handleVideoPlayAttempt(item, index)}
+                  onPlay={() => {
+                    setActiveVideoIndex(index);
+                    handleVideoPlayAttempt(item, index);
+                  }}
                   onPause={(currentTime, duration) => {
                     updateUserWatchedVideos({
                       index: index,
