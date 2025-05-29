@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import VideoPlayer from "./VideoPlayer";
+import { processVideoData, getVideoFormat } from "@lib/utils/videoParser";
 
 function Sample({ cta }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -124,6 +125,43 @@ function Sample({ cta }) {
     isModalOpenRef.current = isModalOpen;
   }, [isModalOpen]);
 
+  // Fullscreen değişikliklerini izle
+  useEffect(() => {
+    // Server-side rendering kontrolü
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    
+    const handleFullscreenChange = (event) => {
+      const { isFullscreen } = event.detail;
+      console.log("Fullscreen değişti:", isFullscreen);
+      
+      // Soru görünür ve aktif video varsa
+      if (isQuestionVisible && videoRefs.current[activeVideoIndex]) {
+        console.log("Soru görünür ve aktif video var. Modal konumu güncelleniyor.");
+        setTimeout(() => {
+          const questionModal = document.querySelector(".question-modal");
+          const activeVideoElement = videoRefs.current[activeVideoIndex];
+          
+          if (questionModal && activeVideoElement) {
+            try {
+              if (isFullscreen) {
+                // Fullscreen modunda soru modalını player içine taşı
+                activeVideoElement.appendChildToPlayer(questionModal);
+              }
+            } catch (error) {
+              console.error("Modal konumlandırma hatası:", error);
+            }
+          }
+        }, 200);
+      }
+    };
+    
+    window.addEventListener('video-fullscreen-change', handleFullscreenChange);
+    
+    return () => {
+      window.removeEventListener('video-fullscreen-change', handleFullscreenChange);
+    };
+  }, [isQuestionVisible, activeVideoIndex]);
+
   useEffect(() => {
     // 10 sorudan rastgele 2 soru seçelim
     const randomIndices = [];
@@ -135,22 +173,80 @@ function Sample({ cta }) {
       }
     }
 
+    // Test için ilk soruyu belirli bir saniyeye atalım, hemen görmek için
+    if (selectedQuestions.current.length > 0) {
+      selectedQuestions.current[0].time = 5; // İlk 5 saniyede soru göster
+    }
+    if (selectedQuestions.current.length > 1) {
+      selectedQuestions.current[1].time = 20; // 20. saniyede ikinci soru
+    }
+
     // Seçilen soruların zamanlarını belirle
     setQuestionTimes(selectedQuestions.current.map((q) => q.time));
+    console.log("Seçilen sorular:", selectedQuestions.current);
   }, []);
 
   const handleTimeUpdate = (currentTime, videoElement) => {
+    // Server-side rendering kontrolü
+    if (typeof document === 'undefined') return;
+    
+    // Soru gösteriliyorsa zaman kontrolü yapmaya gerek yok
+    if (isQuestionVisible) return;
+    
     const roundedTime = Math.floor(currentTime);
+    
+    // Debug için log
+    if (roundedTime % 5 === 0 && roundedTime > 0) { // Her 5 saniyede bir log
+      console.log("Video süresi:", roundedTime, "saniye");
+      console.log("Seçili sorular zamanları:", selectedQuestions.current.map(q => q.time));
+    }
+    
     const question = selectedQuestions.current.find(
       (q) => q.time === roundedTime
     );
 
     if (question && !isQuestionVisible) {
+      console.log("SORU BULUNDU! Gösterilecek soru:", question.question);
       setCurrentQuestion(question);
       console.log("Soru gösterilecek saniye:", currentTime);
       pausedTimeRef.current = Math.floor(currentTime);
-      setIsQuestionVisible(true);
-      videoElement.pause(); // Video duraklatılır
+      
+      // Önce videoyu duraklat, sonra soruyu göster
+      if(videoElement && videoElement.pause) {
+        console.log("Video duraklatılıyor");
+        videoElement.pause();
+        
+        // Videoyu duraklattıktan sonra biraz bekle ve soruyu göster
+        setTimeout(() => {
+          setIsQuestionVisible(true);
+          
+          // React'ın DOM'u güncellemesi için bir miktar bekle, sonra fullscreen kontrolü yap
+          setTimeout(() => {
+            try {
+              // Fullscreen modunda soru modalını düzgün konumlandır
+              const isFullscreenMode = videoElement.isFullscreen && videoElement.isFullscreen();
+              const questionModal = document.querySelector(".question-modal");
+              
+              if (isFullscreenMode && questionModal && videoElement.getPlayer) {
+                console.log("Video fullscreen modunda, soru modalını player içine taşıyacağım");
+                
+                const player = videoElement.getPlayer();
+                if (player && player.el) {
+                  // Modalı player içine taşı
+                  const result = videoElement.appendChildToPlayer(questionModal);
+                  console.log("Modal taşıma sonucu:", result);
+                }
+              }
+            } catch (error) {
+              console.error("Modal konumlandırma hatası:", error);
+            }
+          }, 100);
+        }, 200);
+      } else {
+        console.log("Video duraklatılamadı, videoElement:", videoElement);
+        // Video duraklatılamazsa da soruyu göster
+        setIsQuestionVisible(true);
+      }
     }
   };
 
@@ -187,7 +283,10 @@ function Sample({ cta }) {
       .then((response) => response.json())
       .then((data) => {
         console.log("videos data:", data);
-        const sortedVideos = data.sort((a, b) => a.id - b.id);
+        // Video verilerini parse et ve .mpd uzantısını ekle
+        const processedVideos = processVideoData(data);
+        console.log("processed videos:", processedVideos);
+        const sortedVideos = processedVideos.sort((a, b) => a.id - b.id);
         setVideos(sortedVideos);
       })
       .catch((error) => {
@@ -240,24 +339,59 @@ function Sample({ cta }) {
   };
 
   const handleAnswer = (selectedOptionIndex) => {
+    // Server-side rendering kontrolü
+    if (typeof document === 'undefined') return;
+    
     // Aktif videoyu bul
     const videoElement = videoRefs.current[activeVideoIndex];
     
     console.log("Cevap verilen video:", activeVideoIndex);
     console.log("Duraklatılan zaman:", pausedTimeRef.current);
 
-    if (currentQuestion.correct === selectedOptionIndex) {
+    if (currentQuestion && currentQuestion.correct === selectedOptionIndex) {
       console.log("Doğru cevap!");
+      
+      // Önce isQuestionVisible'ı false yap
       setIsQuestionVisible(false);
       
-      if (videoElement) {
-        setTimeout(() => {
-          videoElement.setCurrentTime(pausedTimeRef.current + 1);
-          videoElement.play();
-        }, 2000);
-      }
+      // DOM'dan modalı güvenli şekilde kaldırmayı dene, gerekli olmayabilir
+      // çünkü React DOM'u güncelleyecek, ama önlem olarak ekleyelim
+      setTimeout(() => {
+        try {
+          const questionModal = document.querySelector(".question-modal");
+          if (questionModal && questionModal.parentNode) {
+            questionModal.parentNode.removeChild(questionModal);
+            console.log("Modal DOM'dan kaldırıldı");
+          }
+        } catch (error) {
+          console.error("Modal kaldırılırken hata:", error);
+        }
+        
+        // Fullscreen kontrolü
+        const isFullscreenMode = videoElement && 
+                               videoElement.isFullscreen && 
+                               videoElement.isFullscreen();
+                               
+        console.log("Fullscreen durumu:", isFullscreenMode);
+        
+        // Soruya cevap verildikten sonra videoyu 1 saniye ileri sar ve oynat
+        if (videoElement) {
+          console.log("Video oynatmaya devam ediyor");
+          try {
+            videoElement.setCurrentTime(pausedTimeRef.current + 1);
+            setTimeout(() => {
+              videoElement.play();
+              console.log("Video devam ediyor...");
+            }, 500);
+          } catch (err) {
+            console.error("Video oynatılırken hata:", err);
+          }
+        }
+      }, 300);
     } else {
       console.log("Yanlış cevap!");
+      // Yanlış cevap için kullanıcıya bildirim göster
+      alert("Yanlış cevap, lütfen tekrar deneyin!");
     }
   };
 
@@ -267,7 +401,7 @@ function Sample({ cta }) {
         <section className="section px-1" key={item.id}>
           <div className="section container rounded-xl shadow">
             <div className="row mx-auto items-center justify-center">
-              <div className="md:col-6 lg:col-6">
+              <div className="md:col-6 lg:col-6" style={{ position: "relative" }}>
                 <VideoPlayer
                   ref={(el) => (videoRefs.current[index] = el)}
                   options={{
@@ -279,7 +413,7 @@ function Sample({ cta }) {
                     sources: [
                       {
                         src: `https://basincyaralanmasinionle.xyz/${item.url}`,
-                        type: "application/dash+xml",
+                        type: item.format || "application/dash+xml",
                       },
                     ],
                   }}
@@ -306,31 +440,63 @@ function Sample({ cta }) {
                     handleTimeUpdate(currentTime, videoElement)
                   }
                 />
-                {isQuestionVisible && (
+                {isQuestionVisible && currentQuestion && (
                   <div
                     style={{
-                      position: "fixed",
+                      position: "absolute",
                       top: "50%",
                       left: "50%",
                       transform: "translate(-50%, -50%)",
                       background: "white",
-                      border: "1px solid black",
-                      padding: "20px",
-                      zIndex: 1000,
+                      border: "3px solid #000",
+                      padding: "25px",
+                      zIndex: 9999,
+                      width: "90%",
+                      maxWidth: "500px",
+                      borderRadius: "8px",
+                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.5)",
+                      color: "black",
+                      pointerEvents: "auto"
                     }}
+                    className="question-modal"
                   >
-                    <p>{currentQuestion.question}</p>
-                    {currentQuestion.options.map((option, index) => (
+                    <p style={{ 
+                      fontWeight: "bold", 
+                      fontSize: "20px", 
+                      marginBottom: "20px", 
+                      color: "black",
+                      textAlign: "center" 
+                    }}>
+                      {currentQuestion.question}
+                    </p>
+                    {currentQuestion.options.map((option, i) => (
                       <button
-                        key={index}
-                        onClick={() => handleAnswer(index)}
+                        key={i}
+                        onClick={() => handleAnswer(i)}
                         style={{
                           display: "block",
-                          margin: "10px 0",
-                          padding: "10px",
+                          width: "100%",
+                          margin: "12px 0",
+                          padding: "15px",
                           background: "#f0f0f0",
                           border: "1px solid #ccc",
                           cursor: "pointer",
+                          borderRadius: "6px",
+                          color: "black",
+                          transition: "all 0.2s ease",
+                          fontSize: "16px",
+                          textAlign: "left",
+                          fontWeight: "500"
+                        }}
+                        onMouseOver={(e) => {
+                          e.target.style.background = "#e0e0e0";
+                          e.target.style.transform = "translateY(-2px)";
+                          e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
+                        }}
+                        onMouseOut={(e) => {
+                          e.target.style.background = "#f0f0f0";
+                          e.target.style.transform = "translateY(0)";
+                          e.target.style.boxShadow = "none";
                         }}
                       >
                         {option}
