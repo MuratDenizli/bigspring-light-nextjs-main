@@ -4,7 +4,6 @@
 
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['react-lite-youtube-embed'],
   experimental: {
     esmExternals: 'loose'
   }
