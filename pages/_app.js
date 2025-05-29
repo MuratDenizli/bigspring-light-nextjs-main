@@ -12,12 +12,43 @@ const App = ({ Component, pageProps }) => {
   const pf = theme.fonts.font_family.primary;
   const sf = theme.fonts.font_family.secondary;
   const [fontcss, setFontcss] = useState();
+  
   useEffect(() => {
+    // Global error handler
+    const handleError = (event) => {
+      if (event.error && event.error.message && event.error.message.includes('ethereum')) {
+        event.preventDefault();
+        console.warn('Ethereum error suppressed:', event.error.message);
+      }
+    };
+
+    // Ethereum hatalarını önlemek için window kontrolü
+    if (typeof window !== 'undefined') {
+      // Global error listener ekle
+      window.addEventListener('error', handleError);
+      
+      // Ethereum objesi yoksa boş bir obje oluştur
+      if (!window.ethereum) {
+        window.ethereum = {
+          selectedAddress: null,
+          isConnected: () => false,
+          request: () => Promise.reject(new Error('No wallet detected'))
+        };
+      }
+    }
+    
     fetch(
       `https://fonts.googleapis.com/css2?family=${pf}${
         sf ? "&family=" + sf : ""
       }&display=swap`
     ).then((res) => res.text().then((css) => setFontcss(css)));
+
+    // Cleanup
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('error', handleError);
+      }
+    };
   }, [pf, sf]);
 
   // google tag manager (gtm)
