@@ -1,8 +1,5 @@
 import config from "@config/config.json";
-import YoutubePlayer from "@layouts/components/YoutubePlayer";
 import { plainify } from "@lib/utils/textConverter";
-import Image from "next/image";
-import Link from "next/link";
 
 const Posts = ({ posts }) => {
   const { blog_folder, summary_length } = config.settings;
