@@ -278,7 +278,7 @@ function Sample({ cta }) {
   }, []);
 
   const getAllVideos = () => {
-    const videosUrl = "https://basincyaralanmasinionle.xyz/getAllVideos";
+    const videosUrl = "https://api.basincyaralanmasinionle.com/getAllVideos";
     fetch(videosUrl)
       .then((response) => response.json())
       .then((data) => {
@@ -303,7 +303,7 @@ function Sample({ cta }) {
       return;
     }
 
-    fetch(`https://basincyaralanmasinionle.xyz/updateWatchedList`, {
+    fetch(`https://api.basincyaralanmasinionle.com/updateWatchedList`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -412,7 +412,7 @@ function Sample({ cta }) {
                     experimentalSvgIcons: true,
                     sources: [
                       {
-                        src: `https://basincyaralanmasinionle.xyz/${item.url}`,
+                        src: `https://api.basincyaralanmasinionle.com/${item.url}`,
                         type: item.format || "application/dash+xml",
                       },
                     ],
@@ -532,7 +532,7 @@ const Modal = ({ onClose, setIsCorrect, setUserId }) => {
   };
 
   const handleCheck = () => {
-    const getAllUsersUrl = "https://basincyaralanmasinionle.xyz/getAllUsers";
+    const getAllUsersUrl = "https://api.basincyaralanmasinionle.com/getAllUsers";
 
     fetch(getAllUsersUrl)
       .then((response) => response.json())
