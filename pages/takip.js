@@ -1,13 +1,18 @@
 import config from "@config/config.json";
 import Base from "@layouts/Baseof";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FaCheckCircle,
   FaChevronDown,
   FaClock,
+  FaLock,
+  FaPlus,
   FaRegCircle,
   FaSearch,
+  FaTrash,
+  FaUnlockAlt,
   FaUserGraduate,
+  FaUserPlus,
   FaVideo,
 } from "react-icons/fa";
 
@@ -75,7 +80,7 @@ const Ilerleme = ({ yuzde }) => (
 
 /* ---------- tek hasta satırı ---------- */
 
-const HastaKart = ({ hasta, videolar }) => {
+const HastaKart = ({ hasta, videolar, yonetim, onSil }) => {
   const [acik, setAcik] = useState(false);
 
   const liste = temizListe(hasta.watchedList);
@@ -100,48 +105,60 @@ const HastaKart = ({ hasta, videolar }) => {
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-shadow hover:shadow-md">
       {/* başlık satırı */}
-      <button
-        onClick={() => setAcik((a) => !a)}
-        className="flex w-full items-center gap-4 p-5 text-left"
-      >
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-theme-light text-lg font-bold text-primary">
-          {hasta.username?.charAt(0)?.toUpperCase() || "?"}
-        </div>
+      <div className="flex items-center">
+        <button
+          onClick={() => setAcik((a) => !a)}
+          className="flex flex-1 items-center gap-4 p-5 text-left"
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-theme-light text-lg font-bold text-primary">
+            {hasta.username?.charAt(0)?.toUpperCase() || "?"}
+          </div>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="truncate font-semibold text-dark">
-              {hasta.username || "İsimsiz Hasta"}
-            </span>
-            {yuzde >= 100 && (
-              <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
-                Tamamlandı
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="truncate font-semibold text-dark">
+                {hasta.username || "İsimsiz Hasta"}
               </span>
-            )}
-          </div>
-          <div className="mt-2 flex items-center gap-3">
-            <div className="max-w-[260px] flex-1">
-              <Ilerleme yuzde={yuzde} />
+              {yuzde >= 100 && (
+                <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                  Tamamlandı
+                </span>
+              )}
             </div>
-            <span className="shrink-0 text-sm font-medium text-text">
-              {tamamlanan}/{toplamVideo} video
-            </span>
+            <div className="mt-2 flex items-center gap-3">
+              <div className="max-w-[260px] flex-1">
+                <Ilerleme yuzde={yuzde} />
+              </div>
+              <span className="shrink-0 text-sm font-medium text-text">
+                {tamamlanan}/{toplamVideo} video
+              </span>
+            </div>
           </div>
-        </div>
 
-        <div className="hidden shrink-0 text-right sm:block">
-          <div className="text-h4 font-bold text-primary">%{yuzde}</div>
-          <div className="flex items-center justify-end gap-1 text-xs text-text">
-            <FaClock /> {saniyeToOkunabilir(toplamSure)}
+          <div className="hidden shrink-0 text-right sm:block">
+            <div className="text-h4 font-bold text-primary">%{yuzde}</div>
+            <div className="flex items-center justify-end gap-1 text-xs text-text">
+              <FaClock /> {saniyeToOkunabilir(toplamSure)}
+            </div>
           </div>
-        </div>
 
-        <FaChevronDown
-          className={`shrink-0 text-text transition-transform ${
-            acik ? "rotate-180" : ""
-          }`}
-        />
-      </button>
+          <FaChevronDown
+            className={`shrink-0 text-text transition-transform ${
+              acik ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+
+        {yonetim && (
+          <button
+            onClick={() => onSil(hasta)}
+            title="Hastayı sil"
+            className="mr-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-red-500 transition-colors hover:bg-red-50"
+          >
+            <FaTrash />
+          </button>
+        )}
+      </div>
 
       {/* detay */}
       {acik && (
@@ -183,6 +200,138 @@ const HastaKart = ({ hasta, videolar }) => {
   );
 };
 
+/* ---------- yönetim paneli (şifre kapısı + ekleme formu) ---------- */
+
+const YonetimPaneli = ({ sifre, setSifre, onEkle }) => {
+  const [acik, setAcik] = useState(false);
+  const [sifreGiris, setSifreGiris] = useState("");
+  const [yeniIsim, setYeniIsim] = useState("");
+  const [ekleniyor, setEkleniyor] = useState(false);
+  const [mesaj, setMesaj] = useState(null); // {tip:'ok'|'err', metin}
+
+  const kilitAcik = sifre !== "";
+
+  const kilidiAc = (e) => {
+    e.preventDefault();
+    if (sifreGiris.trim()) {
+      setSifre(sifreGiris.trim());
+      setSifreGiris("");
+    }
+  };
+
+  const ekle = async (e) => {
+    e.preventDefault();
+    const isim = yeniIsim.trim();
+    if (!isim) return;
+    setEkleniyor(true);
+    setMesaj(null);
+    try {
+      const r = await fetch(`${API}/createUser`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: isim, password: sifre }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (r.status === 401) {
+        setMesaj({ tip: "err", metin: "Parola hatalı. Yönetim modu kilitlendi." });
+        setSifre("");
+        return;
+      }
+      if (!r.ok) {
+        setMesaj({ tip: "err", metin: data.error || "Eklenemedi" });
+        return;
+      }
+      setMesaj({ tip: "ok", metin: `"${isim}" eklendi.` });
+      setYeniIsim("");
+      onEkle();
+    } catch (err) {
+      setMesaj({ tip: "err", metin: "Sunucuya ulaşılamadı" });
+    } finally {
+      setEkleniyor(false);
+    }
+  };
+
+  return (
+    <div className="mb-6 rounded-2xl border border-border bg-white p-5 shadow-sm">
+      {!acik && !kilitAcik ? (
+        <button
+          onClick={() => setAcik(true)}
+          className="flex items-center gap-2 text-sm font-medium text-primary"
+        >
+          <FaLock /> Yönetim modu
+        </button>
+      ) : !kilitAcik ? (
+        <form onSubmit={kilidiAc} className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2 text-sm font-medium text-dark">
+            <FaLock className="text-primary" /> Yönetim parolası
+          </div>
+          <input
+            type="password"
+            autoFocus
+            value={sifreGiris}
+            onChange={(e) => setSifreGiris(e.target.value)}
+            placeholder="Parola"
+            className="rounded-full border border-border bg-white px-4 py-2 text-dark focus:border-primary focus:ring-primary sm:w-56"
+          />
+          <button
+            type="submit"
+            className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-white"
+          >
+            Kilidi Aç
+          </button>
+          <button
+            type="button"
+            onClick={() => setAcik(false)}
+            className="text-sm text-text hover:text-dark"
+          >
+            Vazgeç
+          </button>
+        </form>
+      ) : (
+        <div>
+          <div className="mb-3 flex items-center gap-2 text-sm font-medium text-green-600">
+            <FaUnlockAlt /> Yönetim modu açık
+            <button
+              onClick={() => setSifre("")}
+              className="ml-2 text-xs font-normal text-text underline hover:text-dark"
+            >
+              kilitle
+            </button>
+          </div>
+          <form onSubmit={ekle} className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <FaUserPlus className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text" />
+              <input
+                type="text"
+                value={yeniIsim}
+                onChange={(e) => setYeniIsim(e.target.value)}
+                placeholder="Yeni hasta adı soyadı"
+                className="w-full rounded-full border border-border bg-white py-3 pl-11 pr-4 text-dark focus:border-primary focus:ring-primary"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={ekleniyor || !yeniIsim.trim()}
+              className="flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-white disabled:opacity-50"
+            >
+              <FaPlus /> {ekleniyor ? "Ekleniyor..." : "Hasta Ekle"}
+            </button>
+          </form>
+          {mesaj && (
+            <p
+              className={`mt-3 text-sm ${
+                mesaj.tip === "ok" ? "text-green-600" : "text-red-500"
+              }`}
+            >
+              {mesaj.metin}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 /* ---------- ana sayfa ---------- */
 
 const Takip = () => {
@@ -194,35 +343,60 @@ const Takip = () => {
   const [arama, setArama] = useState("");
   const [filtre, setFiltre] = useState("hepsi"); // hepsi | tamamlandi | devam
   const [sirala, setSirala] = useState("ilerleme"); // ilerleme | isim
+  const [sifre, setSifre] = useState(""); // yönetim parolası ("" = kilitli)
+
+  const yukle = useCallback(async () => {
+    try {
+      setYukleniyor(true);
+      const [uRes, vRes] = await Promise.all([
+        fetch(`${API}/getAllUsers`),
+        fetch(`${API}/getAllVideos`),
+      ]);
+      if (!uRes.ok || !vRes.ok) throw new Error("Veri alınamadı");
+      const [users, vids] = await Promise.all([uRes.json(), vRes.json()]);
+      setHastalar(Array.isArray(users) ? users : []);
+      setVideolar(
+        Array.isArray(vids) ? [...vids].sort((a, b) => a.id - b.id) : []
+      );
+      setHata(null);
+    } catch (e) {
+      setHata(e.message || "Bir hata oluştu");
+    } finally {
+      setYukleniyor(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let iptal = false;
-    const veriGetir = async () => {
-      try {
-        setYukleniyor(true);
-        const [uRes, vRes] = await Promise.all([
-          fetch(`${API}/getAllUsers`),
-          fetch(`${API}/getAllVideos`),
-        ]);
-        if (!uRes.ok || !vRes.ok) throw new Error("Veri alınamadı");
-        const [users, vids] = await Promise.all([uRes.json(), vRes.json()]);
-        if (iptal) return;
-        setHastalar(Array.isArray(users) ? users : []);
-        setVideolar(
-          Array.isArray(vids) ? [...vids].sort((a, b) => a.id - b.id) : []
-        );
-        setHata(null);
-      } catch (e) {
-        if (!iptal) setHata(e.message || "Bir hata oluştu");
-      } finally {
-        if (!iptal) setYukleniyor(false);
+    yukle();
+  }, [yukle]);
+
+  const sil = async (hasta) => {
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(`"${hasta.username}" adlı hastayı silmek istediğinize emin misiniz?`)
+    )
+      return;
+    try {
+      const r = await fetch(`${API}/deleteUser`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: hasta.id, password: sifre }),
+      });
+      if (r.status === 401) {
+        setSifre("");
+        if (typeof window !== "undefined")
+          window.alert("Parola hatalı. Yönetim modu kilitlendi.");
+        return;
       }
-    };
-    veriGetir();
-    return () => {
-      iptal = true;
-    };
-  }, []);
+      if (!r.ok) {
+        if (typeof window !== "undefined") window.alert("Silme başarısız.");
+        return;
+      }
+      yukle();
+    } catch (e) {
+      if (typeof window !== "undefined") window.alert("Sunucuya ulaşılamadı.");
+    }
+  };
 
   // hesaplanmış değerler
   const { gosterilen, ozet } = useMemo(() => {
@@ -325,8 +499,13 @@ const Takip = () => {
             />
           </div>
 
+          {/* yönetim paneli */}
+          <div className="mt-8">
+            <YonetimPaneli sifre={sifre} setSifre={setSifre} onEkle={yukle} />
+          </div>
+
           {/* kontroller */}
-          <div className="mt-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="relative w-full md:max-w-xs">
               <FaSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text" />
               <input
@@ -402,7 +581,13 @@ const Takip = () => {
             {!yukleniyor && !hata && gosterilen.length > 0 && (
               <div className="space-y-3">
                 {gosterilen.map((h) => (
-                  <HastaKart key={h.id} hasta={h} videolar={videolar} />
+                  <HastaKart
+                    key={h.id}
+                    hasta={h}
+                    videolar={videolar}
+                    yonetim={sifre !== ""}
+                    onSil={sil}
+                  />
                 ))}
               </div>
             )}
