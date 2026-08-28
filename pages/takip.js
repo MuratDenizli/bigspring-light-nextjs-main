@@ -446,7 +446,7 @@ const Takip = () => {
   }, [hastalar, videolar, arama, filtre, sirala]);
 
   return (
-    <Base title="Hasta İzleme Takibi">
+    <Base title="Eğitim Katılım ve İzlem">
       {/* hero */}
       <section
         className="py-14"
@@ -460,7 +460,7 @@ const Takip = () => {
             Eğitim Paneli
           </p>
           <h1 className="mt-2 text-h2 font-bold text-white sm:text-h1">
-            Hasta İzleme Takibi
+            Eğitim Katılım ve İzlem
           </h1>
           <p className="mt-3 max-w-xl text-white/80">
             Hastaların eğitim videolarını ne kadar izlediğini ve tamamlama
